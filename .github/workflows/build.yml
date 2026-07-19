@@ -9,7 +9,22 @@ env:
   MODULE_ID: isolpolicy_zygisk
   # nttld/setup-ndk pakai format revisi "rXXy" (r27c), BUKAN nomor
   # side-by-side "27.2.12479018" yang dipakai Gradle ndkVersion / SDK Manager.
-  NDK_VERSION: "r27c"
+  #
+  # CATATAN: naik dari r27c ke r29 (rilis stabil terbaru per Juli 2026).
+  # LSPlant memakai fitur C++23 yang sangat baru (lambda dengan static
+  # operator(), lewat pola "decltype([] static {})" di hook_helper.hpp)
+  # untuk membedakan hook callback statis vs non-statis. Clang 18.0.3 yang
+  # dibawa NDK r27c punya bug pada deteksi ini: hasil pengecekan `requires`
+  # salah, sehingga `backup(...)` dipanggil dengan tanda tangan yang salah
+  # ("too many arguments to function call, expected 0, have 1" di
+  # art_method.cxx). Ini murni bug toolchain (Clang), bukan bug kode kita
+  # ataupun LSPlant — sudah dicoba pin ke berbagai commit LSPlant/master,
+  # errornya tetap sama karena memang bug di kompilernya.
+  # NDK r29 membawa Clang jauh lebih baru (clang-r563880c vs clang-r522817c
+  # di r27c) dengan banyak fix terkait lambda/template/concepts C++ terbaru.
+  # Kalau ternyata r29 masih kena bug yang sama, coba naik lagi ke r30 begitu
+  # rilis stabilnya tersedia di https://github.com/android/ndk/releases.
+  NDK_VERSION: "r29"
 
 jobs:
   build-hooker-dex:
@@ -87,6 +102,7 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=android-29 \
+            -DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=OFF \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build-${{ matrix.abi }} --target isolpolicy -j"$(nproc)"
 

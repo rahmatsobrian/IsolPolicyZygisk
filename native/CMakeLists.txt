@@ -16,7 +16,10 @@ FetchContent_Declare(
     lsplant_src
     GIT_REPOSITORY https://github.com/LSPosed/LSPlant.git
     GIT_TAG        master
-    GIT_SUBMODULES_RECURSE TRUE
+    # LSPlant juga punya submodule lain di test/ yang pakai URL SSH
+    # (git@github.com:...) dan gagal di-clone di CI (tidak ada SSH key).
+    # Kita cuma butuh dex_builder, jadi batasi submodule yang di-init.
+    GIT_SUBMODULES "lsplant/src/main/jni/external/dex_builder"
 )
 FetchContent_Populate(lsplant_src)
 set(LSPLANT_STANDALONE ON CACHE INTERNAL "")

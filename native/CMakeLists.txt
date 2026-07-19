@@ -22,7 +22,6 @@ FetchContent_Declare(
     GIT_SUBMODULES "lsplant/src/main/jni/external/dex_builder"
 )
 FetchContent_Populate(lsplant_src)
-set(LSPLANT_STANDALONE ON CACHE INTERNAL "")
 add_subdirectory(${lsplant_src_SOURCE_DIR}/lsplant/src/main/jni
                  ${CMAKE_BINARY_DIR}/lsplant_build)
 

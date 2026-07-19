@@ -71,10 +71,14 @@ jobs:
         with:
           ndk-version: ${{ env.NDK_VERSION }}
 
+      - name: Ensure Ninja is available
+        run: command -v ninja || sudo apt-get update && sudo apt-get install -y ninja-build
+
       - name: Configure & build (${{ matrix.abi }})
         run: |
           set -e
           cmake -S native -B build-${{ matrix.abi }} \
+            -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
             -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=android-29 \

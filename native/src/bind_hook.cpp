@@ -114,6 +114,13 @@ static bool HookAllStartProcessLocked(JNIEnv *env, jclass processListClass, jcla
 
     jmethodID callbackMethod = env->GetMethodID(hookerClass, "callback",
                                                   "([Ljava/lang/Object;)Ljava/lang/Object;");
+    // lsplant::Hook butuh objek reflection java.lang.reflect.Method (jobject),
+    // bukan jmethodID. jmethodID cuma handle native buat manggil method lewat
+    // Call...Method, sedangkan LSPlant perlu representasi reflection-nya
+    // supaya bisa dipakai sebagai target hook/callback di level ART.
+    // ToReflectedMethod mengonversi jmethodID -> jobject (Method) yang sesuai.
+    jobject callbackMethodObj = env->ToReflectedMethod(hookerClass, callbackMethod,
+                                                         JNI_FALSE);
     jfieldID backupField = env->GetFieldID(hookerClass, "backupMethod",
                                             "Ljava/lang/reflect/Method;");
     jmethodID hookerCtor = env->GetMethodID(hookerClass, "<init>", "()V");
@@ -138,7 +145,7 @@ static bool HookAllStartProcessLocked(JNIEnv *env, jclass processListClass, jcla
         if (!env->IsSameObject(returnType, booleanType)) continue;
 
         jobject hookerInstance = env->NewObject(hookerClass, hookerCtor);
-        jobject backup = lsplant::Hook(env, method, hookerInstance, callbackMethod);
+        jobject backup = lsplant::Hook(env, method, hookerInstance, callbackMethodObj);
         if (!backup) {
             LOGW("lsplant::Hook gagal untuk overload startProcessLocked ke-%d", (int) i);
             continue;

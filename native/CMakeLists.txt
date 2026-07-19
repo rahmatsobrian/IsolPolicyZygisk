@@ -27,14 +27,24 @@ add_subdirectory(${lsplant_src_SOURCE_DIR}/lsplant/src/main/jni
 
 # ---------------------------------------------------------------------------
 # Dobby — backend inline-hook untuk lsplant::InitInfo::inline_hooker.
+#
+# Dobby's "ClosureTrampolineBridge" (fitur pembuatan closure dinamis, BUKAN
+# fitur inline-hook yang kita pakai) berisi file .asm untuk arm64/x64 yang
+# ditulis pakai sintaks assembler Apple/Mach-O (relokasi @PAGE/@PAGEOFF) dan
+# gagal di-assemble oleh clang integrated assembler target Android/ELF.
+# Fitur ini tidak dipakai sama sekali oleh DobbyHook/DobbyDestroy (dicek
+# manual: tidak ada referensi ke closure_bridge_init/ClosureTrampolineARM64
+# di luar folder ClosureTrampolineBridge itu sendiri; satu-satunya simbol
+# yang dipakai di luar, common_closure_bridge_handler, didefinisikan inline
+# di header common_bridge_handler.h sehingga tidak butuh file .cc/.asm-nya).
+# Jadi kita coret baris-baris itu dari CMakeLists.txt Dobby sebelum dipakai.
 # ---------------------------------------------------------------------------
 FetchContent_Declare(
     dobby_src
     GIT_REPOSITORY https://github.com/jmpews/Dobby.git
     GIT_TAG        master
+    PATCH_COMMAND sed -i "/ClosureTrampolineBridge/d" CMakeLists.txt
 )
-set(DOBBY_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(DOBBY_GENERATE_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(dobby_src)
 
 # ---------------------------------------------------------------------------

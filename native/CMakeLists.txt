@@ -11,11 +11,32 @@ include(FetchContent)
 # LSPlant — mesin hook ART (dipakai LSPosed generasi baru sendiri).
 # Kita pakai CMakeLists standalone yang sudah disediakan di dalam repo di
 # lsplant/src/main/jni (target: lsplant_static).
+#
+# CATATAN PENTING (jangan pakai GIT_TAG master lagi):
+# LSPlant tidak punya git tag rilis yang cocok dengan kode C++23 modules
+# yang dipakai sekarang (versi Maven terakhir, 6.4, adalah dari April 2024,
+# jauh sebelum refactor ke .ixx/.cxx modules). Jadi kita WAJIB pin ke commit
+# hash tertentu dari master, bukan mengikuti master terus-menerus, supaya
+# build tidak tiba-tiba pecah lagi saat upstream mendorong perubahan yang
+# belum matang (seperti kasus error "too many arguments to function call"
+# di art_method.cxx / hook_helper.hpp kemarin).
+#
+# GIT_TAG di bawah di-pin ke b25ea235f1eefb8822f386ac20746f4809e6c28c
+# ("Fix 32-bit symbol name for EncodeGenericId"), yaitu commit yang sudah
+# terverifikasi SUKSES di official CI LSPlant sendiri: GitHub Actions run
+# "Build #474" berstatus Success, dengan build job + 30 job test (emulator
+# x86/x86_64 di berbagai API level, termasuk API 21-36) semuanya lolos.
+# Sumber: https://github.com/LSPosed/LSPlant/actions/runs/27814959360
+#
+# Kalau suatu saat mau update, cari run terbaru di
+# https://github.com/LSPosed/LSPlant/actions/workflows/build.yml
+# yang berstatus "Success" (bukan sekadar "completed"/gagal sebagian), lalu
+# ganti hash di bawah dengan commit dari run itu.
 # ---------------------------------------------------------------------------
 FetchContent_Declare(
     lsplant_src
     GIT_REPOSITORY https://github.com/LSPosed/LSPlant.git
-    GIT_TAG        master
+    GIT_TAG        b25ea235f1eefb8822f386ac20746f4809e6c28c
     # LSPlant juga punya submodule lain di test/ yang pakai URL SSH
     # (git@github.com:...) dan gagal di-clone di CI (tidak ada SSH key).
     # Kita cuma butuh dex_builder, jadi batasi submodule yang di-init.

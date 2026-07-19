@@ -17,6 +17,13 @@
 
 #pragma once
 
+// NDK r27+ note: jni.h tidak lagi transitively include <sys/types.h>,
+// padahal header ini pakai dev_t & ino_t (lihat pltHookRegister di bawah).
+// Ditambahkan manual di sini, bukan mengubah definisi/isi API di bawahnya
+// (comment upstream "DO NOT MODIFY ANY CODE IN THIS HEADER" tetap dihormati
+// untuk body-nya, ini cuma include tambahan yang sebelumnya "kebetulan"
+// selalu tersedia lewat include transitif).
+#include <sys/types.h>
 #include <jni.h>
 
 #define ZYGISK_API_VERSION 4

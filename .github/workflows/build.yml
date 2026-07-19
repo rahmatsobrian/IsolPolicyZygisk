@@ -7,7 +7,9 @@ on:
 
 env:
   MODULE_ID: isolpolicy_zygisk
-  NDK_VERSION: "27.2.12479018"
+  # nttld/setup-ndk pakai format revisi "rXXy" (r27c), BUKAN nomor
+  # side-by-side "27.2.12479018" yang dipakai Gradle ndkVersion / SDK Manager.
+  NDK_VERSION: "r27c"
 
 jobs:
   build-hooker-dex:

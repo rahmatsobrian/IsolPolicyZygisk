@@ -28,6 +28,18 @@ add_subdirectory(${lsplant_src_SOURCE_DIR}/lsplant/src/main/jni
 # ---------------------------------------------------------------------------
 # Dobby — backend inline-hook untuk lsplant::InitInfo::inline_hooker.
 #
+# CATATAN PENTING (jangan pakai GIT_TAG master lagi):
+# Upstream jmpews/Dobby sempat direfactor (class OSMemory dihapus/diganti,
+# struct RuntimeModule kehilangan member load_address, dst) sehingga build
+# yang narik "master" langsung bisa pecah kapan saja tanpa peringatan.
+# Kita pindah ke fork JingMatrix/Dobby, yaitu fork yang dipelihara supaya
+# tetap kompatibel dengan LSPlant (dipakai juga oleh proyek Vector, yang
+# arsitekturnya sama seperti proyek ini: LSPlant + Dobby inline-hooker).
+# GIT_TAG di-pin ke commit tertentu (bukan branch mengambang) supaya build
+# ini reproducible dan tidak tiba-tiba pecah lagi kalau upstream berubah.
+# Kalau suatu saat mau update, ganti hash di bawah ke commit JingMatrix/Dobby
+# yang sudah terbukti sukses dipakai build Vector terbaru.
+#
 # Dobby's "ClosureTrampolineBridge" (fitur pembuatan closure dinamis, BUKAN
 # fitur inline-hook yang kita pakai) berisi file .asm untuk arm64/x64 yang
 # ditulis pakai sintaks assembler Apple/Mach-O (relokasi @PAGE/@PAGEOFF) dan
@@ -38,10 +50,12 @@ add_subdirectory(${lsplant_src_SOURCE_DIR}/lsplant/src/main/jni
 # yang dipakai di luar, common_closure_bridge_handler, didefinisikan inline
 # di header common_bridge_handler.h sehingga tidak butuh file .cc/.asm-nya).
 # Jadi kita coret baris-baris itu dari CMakeLists.txt Dobby sebelum dipakai.
+# Kalau file CMakeLists.txt Dobby di fork ini sudah tidak mengandung baris
+# ClosureTrampolineBridge, sed ini akan menjadi no-op (aman, tidak gagal).
 # ---------------------------------------------------------------------------
 FetchContent_Declare(
     dobby_src
-    GIT_REPOSITORY https://github.com/jmpews/Dobby.git
+    GIT_REPOSITORY https://github.com/JingMatrix/Dobby.git
     GIT_TAG        master
     PATCH_COMMAND sed -i "/ClosureTrampolineBridge/d" CMakeLists.txt
 )

@@ -56,7 +56,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        abi: [arm64-v8a, armeabi-v7a]
+        # Cuma arm64-v8a: hook kita target system_server, yang di semua
+        # device arm64 (termasuk vince/rolex) SELALU jalan sebagai proses
+        # 64-bit, jadi build armeabi-v7a tidak pernah dipakai untuk modul
+        # ini. Ini juga menghindari bug CMake Dobby di 32-bit arm
+        # ("core/arch/Cpu.h" not found saat compile assembler-arm.cc).
+        abi: [arm64-v8a]
     steps:
       - uses: actions/checkout@v4
 
@@ -101,11 +106,6 @@ jobs:
           name: so-arm64-v8a
           path: dl/arm64-v8a
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: so-armeabi-v7a
-          path: dl/armeabi-v7a
-
       - name: Assemble module zip
         run: |
           set -e
@@ -113,7 +113,6 @@ jobs:
           cp -r magisk_module/. out/module/
           mkdir -p out/module/zygisk
           cp dl/arm64-v8a/libisolpolicy.so out/module/zygisk/arm64-v8a.so
-          cp dl/armeabi-v7a/libisolpolicy.so out/module/zygisk/armeabi-v7a.so
           rm -f out/module/zygisk/.gitkeep
           cd out/module && zip -r9 ../IsolPolicyZygisk.zip . -x '.git*'
 

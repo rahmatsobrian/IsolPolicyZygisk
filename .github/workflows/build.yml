@@ -1,0 +1,117 @@
+name: Build IsolPolicy Zygisk
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+env:
+  MODULE_ID: isolpolicy_zygisk
+  NDK_VERSION: "27.2.12479018"
+
+jobs:
+  build-hooker-dex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android cmdline-tools (buat d8)
+        uses: android-actions/setup-android@v3
+
+      - name: Install build-tools (d8 ada di sini)
+        run: sdkmanager --install "build-tools;35.0.0"
+
+      - name: Compile ProcessListHooker.java -> class -> dex
+        run: |
+          set -e
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          SRC=native/hooker_java/io/github/mhmrdd/isolationpolicy/hook/ProcessListHooker.java
+          mkdir -p build/classes build/dex
+          javac -d build/classes "$SRC"
+          "$BT/d8" --output build/dex \
+            build/classes/io/github/mhmrdd/isolationpolicy/hook/ProcessListHooker.class
+          xxd -i build/dex/classes.dex > hooker_dex_gen.h
+          # xxd menamai array `build_dex_classes_dex`, samakan nama dengan yang
+          # dipakai native/src/hooker_dex.h (kHookerDex / kHookerDexLen)
+          sed -i \
+            -e 's/unsigned char build_dex_classes_dex\[\]/const unsigned char kHookerDex[]/' \
+            -e 's/unsigned int build_dex_classes_dex_len/const unsigned int kHookerDexLen/' \
+            hooker_dex_gen.h
+          cp hooker_dex_gen.h native/src/hooker_dex.h
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hooker_dex_header
+          path: native/src/hooker_dex.h
+
+  build-native:
+    needs: build-hooker-dex
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: hooker_dex_header
+          path: native/src
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+
+      - name: Configure & build (${{ matrix.abi }})
+        run: |
+          set -e
+          cmake -S native -B build-${{ matrix.abi }} \
+            -DCMAKE_TOOLCHAIN_FILE=${{ steps.setup-ndk.outputs.ndk-path }}/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=${{ matrix.abi }} \
+            -DANDROID_PLATFORM=android-29 \
+            -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-${{ matrix.abi }} --target isolpolicy -j"$(nproc)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: so-${{ matrix.abi }}
+          path: build-${{ matrix.abi }}/libisolpolicy.so
+
+  package:
+    needs: build-native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: so-arm64-v8a
+          path: dl/arm64-v8a
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: so-armeabi-v7a
+          path: dl/armeabi-v7a
+
+      - name: Assemble module zip
+        run: |
+          set -e
+          rm -rf out && mkdir -p out/module
+          cp -r magisk_module/. out/module/
+          mkdir -p out/module/zygisk
+          cp dl/arm64-v8a/libisolpolicy.so out/module/zygisk/arm64-v8a.so
+          cp dl/armeabi-v7a/libisolpolicy.so out/module/zygisk/armeabi-v7a.so
+          rm -f out/module/zygisk/.gitkeep
+          cd out/module && zip -r9 ../IsolPolicyZygisk.zip . -x '.git*'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IsolPolicyZygisk-flashable
+          path: out/IsolPolicyZygisk.zip

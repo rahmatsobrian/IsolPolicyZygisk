@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>IsolPolicy (Zygisk)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>IsolPolicy — Zygisk edition</h1>
+  <div class="subtitle">Blokir jalur fork <code>useAppZygote</code> per-paket. Standalone, tanpa LSPosed.</div>
+
+  <div class="banner">
+    Perubahan di bawah baru aktif setelah <b>reboot</b> — daftar deny dibaca
+    sekali saat <code>system_server</code> di-fork.
+  </div>
+
+  <div class="card">
+    <input type="search" id="search" placeholder="Cari nama aplikasi / package" />
+  </div>
+
+  <div class="card" id="list">
+    <div class="status">Memuat daftar aplikasi…</div>
+  </div>
+
+  <div class="card">
+    <button id="apply">Simpan perubahan</button>
+    <div class="status" id="applyStatus"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

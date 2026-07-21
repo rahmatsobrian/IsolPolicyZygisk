@@ -94,6 +94,7 @@ add_library(isolpolicy SHARED
     src/bind_hook.cpp
     src/art_symbol.cpp
     src/config_store.cpp
+    src/denylist_watcher.cpp
 )
 
 target_include_directories(isolpolicy PRIVATE src)

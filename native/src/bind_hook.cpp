@@ -20,6 +20,11 @@ bool IsPackageDenied(const std::string &pkg) {
     return g_denylist.count(pkg) != 0;
 }
 
+void ReplaceDenylist(std::unordered_set<std::string> denylist) {
+    std::lock_guard<std::mutex> lock(g_denylist_mutex);
+    g_denylist = std::move(denylist);
+}
+
 // ---- native methods yang di-bind ke kelas Java ProcessListHooker ----------
 
 static jboolean native_isDenied(JNIEnv *env, jclass, jstring jpkg) {
@@ -161,10 +166,7 @@ static bool HookAllStartProcessLocked(JNIEnv *env, jclass processListClass, jcla
 }
 
 bool InstallBindHook(JNIEnv *env, std::unordered_set<std::string> denylist) {
-    {
-        std::lock_guard<std::mutex> lock(g_denylist_mutex);
-        g_denylist = std::move(denylist);
-    }
+    ReplaceDenylist(std::move(denylist));
 
     if (!OpenArtHandle()) return false;
 

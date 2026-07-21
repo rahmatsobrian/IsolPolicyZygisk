@@ -16,4 +16,10 @@ bool InstallBindHook(JNIEnv *env, std::unordered_set<std::string> denylist);
 // Java lewat RegisterNatives.
 bool IsPackageDenied(const std::string &pkg);
 
+// Mengganti seluruh isi denylist yang sedang aktif dengan snapshot baru,
+// secara thread-safe (dipakai oleh denylist_watcher.cpp saat file config
+// berubah, supaya perubahan lewat WebUI langsung berlaku tanpa reboot atau
+// restart proses apapun).
+void ReplaceDenylist(std::unordered_set<std::string> denylist);
+
 } // namespace isolpolicy

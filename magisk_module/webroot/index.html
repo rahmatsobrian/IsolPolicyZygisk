@@ -10,9 +10,15 @@
   <h1>IsolPolicy — Zygisk edition</h1>
   <div class="subtitle">Blokir jalur fork <code>useAppZygote</code> per-paket. Standalone, tanpa LSPosed.</div>
 
-  <div class="banner">
-    Perubahan di bawah baru aktif setelah <b>reboot</b> — daftar deny dibaca
-    sekali saat <code>system_server</code> di-fork.
+  <div class="card" id="statusCard">
+    <div class="status-row">
+      <span class="status-dot" id="reloadDot"></span>
+      <span id="reloadText">Mengecek status reload…</span>
+    </div>
+    <div class="status-row">
+      <span class="status-dot" id="selinuxDot"></span>
+      <span id="selinuxText">Mengecek SELinux…</span>
+    </div>
   </div>
 
   <div class="card">
@@ -26,6 +32,11 @@
   <div class="card">
     <button id="apply">Simpan perubahan</button>
     <div class="status" id="applyStatus"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Info SELinux / sepolicy</div>
+    <div id="selinuxDetail" class="mono-block">memuat…</div>
   </div>
 
   <script src="app.js"></script>

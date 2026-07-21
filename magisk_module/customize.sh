@@ -30,6 +30,14 @@ fi
 chmod 644 "$DATA_DIR/denylist.conf"
 chmod 755 "$DATA_DIR"
 
+# Magisk/KernelSU/APatch Manager mendeteksi action.sh di root modul secara
+# otomatis dan menampilkan tombol "Action" kalau file ini executable.
+if [ -f "$MODPATH/action.sh" ]; then
+  chmod 755 "$MODPATH/action.sh"
+fi
+
 ui_print "- Konfigurasi awal dibuat di $DATA_DIR"
 ui_print "- Buka WebUI modul ini dari Manager buat pilih paket yang di-deny"
-ui_print "- WAJIB reboot setelah pasang, dan setiap kali ubah daftar deny"
+ui_print "- Reboot WAJIB sekali sekarang (setelah pasang/update modul ini)"
+ui_print "- Setelah itu, perubahan lewat WebUI langsung aktif TANPA reboot"
+ui_print "  (dipantau otomatis lewat inotify, lihat tombol Action kalau perlu paksa reload)"
